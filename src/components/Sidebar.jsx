@@ -1,10 +1,19 @@
-// src/components/Sidebar.jsx
 import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFileAlt,
+  faSearch,
+  faCog,
+  faPlus,
+  faSave,
+  faTimes,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function Sidebar({ resumes, onSelect, onSettings }) {
   const [filter, setFilter] = useState("");
   const [adding, setAdding] = useState(false);
   const [newTag, setNewTag] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
 
   // Only show resumes whose tag includes the filter text (case‑insensitive)
   const filteredResumes = resumes.filter((r) =>
@@ -15,10 +24,12 @@ export default function Sidebar({ resumes, onSelect, onSettings }) {
     setAdding(true);
     setNewTag("");
   };
+
   const cancelAdd = () => {
     setAdding(false);
     setNewTag("");
   };
+
   const saveTag = async () => {
     if (!newTag.trim()) return;
     await window.api.invoke("create-resume", newTag.trim());
@@ -27,59 +38,87 @@ export default function Sidebar({ resumes, onSelect, onSettings }) {
     window.location.reload();
   };
 
+  const handleSelect = (id) => {
+    setSelectedId(id);
+    onSelect(id);
+  };
+
   return (
-    <div
-      style={{ width: "300px", borderRight: "1px solid #ccc", padding: "1rem" }}
-    >
-      <h2>Resumes</h2>
+    <div className="sidebar">
+      <h2>
+        <FontAwesomeIcon icon={faFileAlt} />
+        Resumes
+      </h2>
 
       {/* Search box */}
-      <input
-        type="text"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        placeholder="Search resumes..."
-        style={{ width: "100%", marginBottom: "1rem" }}
-      />
+      <div className="sidebar-search">
+        <FontAwesomeIcon icon={faSearch} className="sidebar-search-icon" />
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Search resumes..."
+          className="form-control"
+        />
+      </div>
 
       {/* List of filtered resumes */}
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <ul className="resume-list">
         {filteredResumes.map((r) => (
           <li
             key={r.id}
-            onClick={() => onSelect(r.id)}
-            style={{ cursor: "pointer", margin: "0.5rem 0" }}
+            onClick={() => handleSelect(r.id)}
+            className={`resume-item ${r.id === selectedId ? "active" : ""}`}
           >
-            📄 {r.tag}
+            <FontAwesomeIcon icon={faFileAlt} className="resume-item-icon" />
+            {r.tag}
           </li>
         ))}
       </ul>
 
       {/* Add-new-resume form */}
       {adding ? (
-        <div style={{ marginTop: "1rem" }}>
+        <div className="input-group" style={{ marginTop: "1rem" }}>
           <input
             type="text"
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="Resume tag"
-            style={{ width: "100%", marginBottom: "0.5rem" }}
+            className="form-control"
+            style={{ marginBottom: "0.5rem" }}
           />
-          <button onClick={saveTag} style={{ marginRight: "0.5rem" }}>
-            Save
-          </button>
-          <button onClick={cancelAdd}>Cancel</button>
+          <div>
+            <button className="btn btn-success" onClick={saveTag}>
+              <FontAwesomeIcon icon={faSave} />
+              Save
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={cancelAdd}
+              style={{ marginLeft: "0.5rem" }}
+            >
+              <FontAwesomeIcon icon={faTimes} />
+              Cancel
+            </button>
+          </div>
         </div>
       ) : (
-        <button onClick={startAdd} style={{ marginTop: "1rem" }}>
-          + New Resume
+        <button
+          className="btn"
+          onClick={startAdd}
+          style={{ marginTop: "1rem" }}
+        >
+          <FontAwesomeIcon icon={faPlus} />
+          New Resume
         </button>
       )}
 
-      <hr style={{ margin: "1.5rem 0" }} />
-
-      {/* Settings */}
-      <button onClick={onSettings}>⚙️ Settings</button>
+      <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
+        <button className="btn btn-secondary" onClick={onSettings}>
+          <FontAwesomeIcon icon={faCog} />
+          Settings
+        </button>
+      </div>
     </div>
   );
 }
