@@ -9,6 +9,14 @@ const db = new Database(dbPath);
 const initSQL = fs.readFileSync(path.join(__dirname, "init.sql"), "utf8");
 db.exec(initSQL);
 
+// Prepared statements
+const insertVersion = db.prepare(
+  "INSERT INTO resume_versions (resume_id, file_path, source_type) VALUES (?, ?, ?)"
+);
+const updateVersion = db.prepare(
+  "UPDATE resume_versions SET file_path = ? WHERE id = ?"
+);
+
 module.exports = {
   // Resumes
   getResumes: () =>
@@ -23,10 +31,8 @@ module.exports = {
       )
       .all(resumeId),
   createVersion: (resumeId, filePath, sourceType) =>
-    db
-      .prepare(
-        "INSERT INTO resume_versions (resume_id, file_path, source_type) VALUES (?,?,?)"
-      )
-      .run(resumeId, filePath, sourceType),
+    insertVersion.run(resumeId, filePath, sourceType),
+  updateVersionPath: (versionId, filePath) =>
+    updateVersion.run(filePath, versionId),
   // TODO: notes, applications, cover letters methods
 };
