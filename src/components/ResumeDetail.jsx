@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
+import PdfPreview from "./PdfPreview";
+
 export default function ResumeDetail({ id }) {
   const [versions, setVersions] = useState([]);
-  useEffect(() => {
-    if (id) {
-      window.api.invoke("get-versions", id).then(setVersions);
-    }
-  }, [id]);
+  const [selectedVersion, setSelectedVersion] = useState(null);
 
-  if (!id) {
-    return <div style={{ flex: 1, padding: "1rem" }}>Select a resume.</div>;
-  }
+  useEffect(() => {
+    if (id) window.api.invoke("get-versions", id).then(setVersions);
+  }, [id]);
 
   const addVersion = async () => {
     const res = await window.api.invoke("select-version-file", id);
@@ -19,18 +17,37 @@ export default function ResumeDetail({ id }) {
     }
   };
 
+  if (!id) {
+    return <div style={{ flex: 1, padding: "1rem" }}>Select a resume.</div>;
+  }
+
   return (
-    <div style={{ flex: 1, padding: "1rem" }}>
+    <div style={{ flex: 1, padding: "1rem", overflowY: "auto" }}>
       <h2>Versions for Resume ID {id}</h2>
-      <ul>
-        {versions.map((v) => (
-          <li key={v.id}>
-            {v.source_type.toUpperCase()} -{" "}
-            {new Date(v.created_at).toLocaleString()}
-          </li>
-        ))}
-      </ul>
-      <button onClick={addVersion}>+ Add Version</button>
+      <div style={{ marginBottom: 16 }}>
+        <ul>
+          {versions.map((v) => (
+            <li
+              key={v.id}
+              onClick={() => setSelectedVersion(v)}
+              style={{ cursor: "pointer", margin: "0.5rem 0" }}
+            >
+              {v.source_type.toUpperCase()} -{" "}
+              {new Date(v.created_at).toLocaleString()}
+            </li>
+          ))}
+        </ul>
+        <button onClick={addVersion}>+ Add Version</button>
+      </div>
+
+      {selectedVersion &&
+        selectedVersion.file_path &&
+        selectedVersion.source_type === "pdf" && (
+          <div>
+            <h3>Preview (v{selectedVersion.id})</h3>
+            <PdfPreview filePath={selectedVersion.file_path} />
+          </div>
+        )}
     </div>
   );
 }
