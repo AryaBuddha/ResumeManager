@@ -1,0 +1,35 @@
+CREATE TABLE IF NOT EXISTS resumes (
+  id INTEGER PRIMARY KEY,
+  tag TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS resume_versions (
+  id INTEGER PRIMARY KEY,
+  resume_id INTEGER NOT NULL REFERENCES resumes(id),
+  file_path TEXT NOT NULL,
+  source_type TEXT NOT NULL DEFAULT 'pdf',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS notes (
+  id INTEGER PRIMARY KEY,
+  version_id INTEGER NOT NULL REFERENCES resume_versions(id),
+  content TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS applications (
+  id INTEGER PRIMARY KEY,
+  version_id INTEGER NOT NULL REFERENCES resume_versions(id),
+  company_name TEXT NOT NULL,
+  applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS cover_letters (
+  id INTEGER PRIMARY KEY,
+  application_id INTEGER NOT NULL REFERENCES applications(id),
+  file_path TEXT,
+  text_content TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
