@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { pdfjs } from "pdfjs-dist";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist/legacy/build/pdf";
+import workerSrc from "pdfjs-dist/legacy/build/pdf.worker.entry";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+// Configure worker
+GlobalWorkerOptions.workerSrc = workerSrc;
 
 export default function PdfPreview({ filePath }) {
   const canvasRef = useRef(null);
@@ -12,7 +14,7 @@ export default function PdfPreview({ filePath }) {
   // Load document
   useEffect(() => {
     if (!filePath) return;
-    const loadingTask = pdfjs.getDocument(filePath);
+    const loadingTask = getDocument({ url: filePath });
     loadingTask.promise.then((pdf) => {
       setPdfDoc(pdf);
       setNumPages(pdf.numPages);

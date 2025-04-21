@@ -1,0 +1,1 @@
+const{contextBridge,ipcRenderer}=require("electron");console.log("Preload script executing!"),contextBridge.exposeInMainWorld("api",{invoke:(e,...o)=>(console.log(`IPC invoke: ${e}`,o),ipcRenderer.invoke(e,...o))});

@@ -12,27 +12,39 @@ function createWindow() {
       contextIsolation: true,
     },
   });
-  win.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+  const htmlPath = path.join(
+    __dirname,
+    ".webpack",
+    "renderer",
+    "main_window.html"
+  );
+  console.log("Loading HTML from:", htmlPath);
+  console.log("File exists:", fs.existsSync(htmlPath));
+  win.loadFile(htmlPath);
+
+  win.webContents.openDevTools();
 }
 
-// IPC Handlers: Resumes & Versions
+// IPC Handlers
 ipcMain.handle("get-resumes", () => db.getResumes());
 ipcMain.handle("create-resume", (_, tag) => db.createResume(tag));
 ipcMain.handle("get-versions", (_, resumeId) => db.getVersions(resumeId));
-
 ipcMain.handle("select-version-file", async (_, resumeId) => {
-  // Open file dialog
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ["openFile"],
-    filters: [{ name: "Resume Files", extensions: ["pdf", "tex"] }],
+    filters: [{ name: "Resumes", extensions: ["pdf", "tex"] }],
   });
   if (canceled || !filePaths.length) return { canceled: true };
 
-  const srcPath = filePaths[0];
-  // Create DB entry with placeholder
-  const { lastInsertRowid: versionId } = db.createVersion(resumeId, "", "pdf");
+  const src = filePaths[0];
+  const sourceType = src.toLowerCase().endsWith(".tex") ? "latex" : "pdf";
+  const { lastInsertRowid: versionId } = db.createVersion(
+    resumeId,
+    "",
+    sourceType
+  );
 
-  // Determine destination directory
   const destDir = path.join(
     __dirname,
     "data",
@@ -41,17 +53,26 @@ ipcMain.handle("select-version-file", async (_, resumeId) => {
     String(versionId)
   );
   await fs.ensureDir(destDir);
-
-  // Copy file to destination
-  const ext = path.extname(srcPath).toLowerCase();
-  const fileName = `resume${ext}`;
-  const destPath = path.join(destDir, fileName);
-  await fs.copy(srcPath, destPath);
-
-  // Update DB with actual path
-  db.updateVersionPath(versionId, destPath);
+  const ext = path.extname(src);
+  const dest = path.join(destDir, `resume${ext}`);
+  await fs.copy(src, dest);
+  db.updateVersionPath(versionId, dest);
 
   return { canceled: false, versionId };
+});
+ipcMain.handle("download-resume", (_, { filePath, tag }) => {
+  const downloadsDir = app.getPath("downloads");
+  const dest = path.join(
+    downloadsDir,
+    `${tag}_resume${path.extname(filePath)}`
+  );
+  fs.copySync(filePath, dest);
+  return dest;
+});
+
+ipcMain.handle("delete-resume-download", (_, destPath) => {
+  fs.removeSync(destPath);
+  return true;
 });
 
 app.whenReady().then(createWindow);

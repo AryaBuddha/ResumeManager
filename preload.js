@@ -1,4 +1,10 @@
 const { contextBridge, ipcRenderer } = require("electron");
+
+console.log("Preload script executing!");
+
 contextBridge.exposeInMainWorld("api", {
-  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  invoke: (channel, ...args) => {
+    console.log(`IPC invoke: ${channel}`, args);
+    return ipcRenderer.invoke(channel, ...args);
+  },
 });
