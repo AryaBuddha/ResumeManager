@@ -1,28 +1,29 @@
+// src/components/Sidebar.jsx
 import React, { useState } from "react";
 
-export default function Sidebar({ resumes, onSelect }) {
+export default function Sidebar({ resumes, onSelect, onSettings }) {
+  const [filter, setFilter] = useState("");
   const [adding, setAdding] = useState(false);
   const [newTag, setNewTag] = useState("");
+
+  // Only show resumes whose tag includes the filter text (case‑insensitive)
+  const filteredResumes = resumes.filter((r) =>
+    r.tag.toLowerCase().includes(filter.toLowerCase())
+  );
 
   const startAdd = () => {
     setAdding(true);
     setNewTag("");
   };
-
   const cancelAdd = () => {
     setAdding(false);
     setNewTag("");
   };
-
   const saveTag = async () => {
     if (!newTag.trim()) return;
     await window.api.invoke("create-resume", newTag.trim());
     setAdding(false);
-    // refresh list
-    const updated = await window.api.invoke("get-resumes");
-    onSelect(null);
-    // onSelect resets selection
-    // Ideally, parent should refetch; we can emit an event or pass a setter
+    // Ideally re-fetch the list, but you can reload for now:
     window.location.reload();
   };
 
@@ -31,8 +32,19 @@ export default function Sidebar({ resumes, onSelect }) {
       style={{ width: "300px", borderRight: "1px solid #ccc", padding: "1rem" }}
     >
       <h2>Resumes</h2>
+
+      {/* Search box */}
+      <input
+        type="text"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        placeholder="Search resumes..."
+        style={{ width: "100%", marginBottom: "1rem" }}
+      />
+
+      {/* List of filtered resumes */}
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {resumes.map((r) => (
+        {filteredResumes.map((r) => (
           <li
             key={r.id}
             onClick={() => onSelect(r.id)}
@@ -42,6 +54,8 @@ export default function Sidebar({ resumes, onSelect }) {
           </li>
         ))}
       </ul>
+
+      {/* Add-new-resume form */}
       {adding ? (
         <div style={{ marginTop: "1rem" }}>
           <input
@@ -61,6 +75,11 @@ export default function Sidebar({ resumes, onSelect }) {
           + New Resume
         </button>
       )}
+
+      <hr style={{ margin: "1.5rem 0" }} />
+
+      {/* Settings */}
+      <button onClick={onSettings}>⚙️ Settings</button>
     </div>
   );
 }

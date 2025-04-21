@@ -3797,7 +3797,7 @@ electron-rebuild@^1.6.0:
     spawn-rx "^3.0.0"
     yargs "^14.2.0"
 
-electron-store@^8.0.0:
+electron-store@^8.2.0:
   version "8.2.0"
   resolved "https://registry.npmjs.org/electron-store/-/electron-store-8.2.0.tgz"
   integrity sha512-ukLL5Bevdil6oieAOXz3CMy+OgaItMiVBg701MNlG6W5RaC0AHN7rvlqTCmeb6O7jP0Qa1KKYTE0xV0xbhF4Hw==

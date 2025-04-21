@@ -80,9 +80,39 @@ try {
       updateCoverLetter.run(filePath, letterId),
     createCoverLetterText: (applicationId, text) =>
       insertCoverLetterText.run(applicationId, text),
+    getLatestVersion: (resumeId) =>
+      db
+        .prepare(
+          "SELECT * FROM resume_versions WHERE resume_id = ? ORDER BY created_at DESC LIMIT 1"
+        )
+        .get(resumeId),
+    getNotesByResume: (resumeId) =>
+      db
+        .prepare(
+          "SELECT n.* FROM notes n JOIN resume_versions v ON n.version_id=v.id WHERE v.resume_id=? ORDER BY n.created_at DESC"
+        )
+        .all(resumeId),
+    createNoteForResume: (resumeId, content) => {
+      const latest = module.exports.getLatestVersion(resumeId);
+      return db
+        .prepare("INSERT INTO notes (version_id, content) VALUES (?, ?)")
+        .run(latest.id, content);
+    },
+    getApplicationsByResume: (resumeId) =>
+      db
+        .prepare(
+          "SELECT a.* FROM applications a JOIN resume_versions v ON a.version_id=v.id WHERE v.resume_id=? ORDER BY a.applied_at DESC"
+        )
+        .all(resumeId),
+    createApplicationForResume: (resumeId, companyName) => {
+      const latest = module.exports.getLatestVersion(resumeId);
+      return db
+        .prepare(
+          "INSERT INTO applications (version_id, company_name) VALUES (?, ?)"
+        )
+        .run(latest.id, companyName);
+    },
   };
-
-  // Continue with the rest of your code...
 } catch (err) {
   console.error("Database initialization error:", err);
 }
